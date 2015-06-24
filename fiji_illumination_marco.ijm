@@ -8,6 +8,8 @@
 // based on your input settings.
 //-------------------------------------------------------------------------------------------------------------------//
 
+macro "Stack Illumination" {
+
 // Check the type of ROI that has been used
 function checkROI(mintype,maxtype,notype) {
 	if ((selectionType() < mintype)||(selectionType() > maxtype)||(selectionType() == notype)||(selectionType() == -1)){
@@ -297,4 +299,7 @@ if (createInfoFile == "Yes") {
 	print(f,"---- Batch Process END ----\t\t");
 	print(f,"Information File Finished: "+currentDate()+"\t");
 	File.close(f);
+}
+
+
 }
