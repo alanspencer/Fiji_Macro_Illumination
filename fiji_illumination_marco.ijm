@@ -238,7 +238,7 @@ for (i=startImage; i< endImage; i++) {
 	}
 	
 	
-	Run "Brightness/Contrast" if selected...
+	// Run "Brightness/Contrast" if selected...
 	if (runBrightnessContrast == "Yes" || runBrightnessContrast == "Auto") {
 
 	  	getMinAndMax(min, max);
@@ -266,7 +266,7 @@ for (i=startImage; i< endImage; i++) {
 	  	
 	}
   	
-  	Run "Despeckle" if selected...
+  	// Run "Despeckle" if selected...
 	if (runDespeckle == "Yes") {
 		run("Despeckle", "slice");
 		if (createInfoFile == "Yes") {
