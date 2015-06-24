@@ -1,4 +1,12 @@
-if (nSlices==0) exit("Stack required");
+//-------------------------------------------------------------------------------------------------------------------//
+// Macro Plugin for FIJI / ImageJ2 - Written by A.R.T. Spencer                                                       //
+//
+// To use this macro: First import a stack into Fiji or ImageJ2. Then go to "Plugins > Macros > Run..." and select   //
+// this file. This will open up a dialog with various input options. Once these have been inputed/selcted click OK.  //
+// If no errors have been found you will now see a directory select dialog, chose the ouput directory for your new   //
+// stack. The macro will now run though each image in the stack creating a new image in your selected output folder  //
+// based on your input settings.
+//-------------------------------------------------------------------------------------------------------------------//
 
 // Check the type of ROI that has been used
 function checkROI(mintype,maxtype,notype) {
@@ -28,7 +36,7 @@ function currentDate() {
 	return timeStr;
 }
 
-// Setup Dialog
+// Setup Dialog function
 function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast) {
 	Dialog.create("Enter Input Data");
 	Dialog.addMessage("The following information is required:");
@@ -45,7 +53,7 @@ function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, cre
 	Dialog.addRadioButtonGroup("Normalize Stack by Reference Image?", newArray("Yes","No"), 1, 2, runNormalizeByReference);
 	Dialog.addSlider("Reference Image", 1, nSlices, referenceImageValue);
 
-  Dialog.addMessage("(Optional) Alter Brightness/Contrast:");
+	Dialog.addMessage("(Optional) Alter Brightness/Contrast:");
 	Dialog.addRadioButtonGroup("Brightness/Contrast", newArray("Yes","No", "Auto"), 1, 2, runBrightnessContrast);
  	Dialog.addNumber("Min Value", minValue);
 	Dialog.addNumber("Max Value", maxValue);
@@ -57,7 +65,10 @@ function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, cre
 	Dialog.show();
 }
 
-// Get Input Values
+// Check that there is a stack available
+if (nSlices==0) exit("Stack required");
+
+// Get Input Values from dialog
 error = 1;
 loop = 1;
 while(error == 1) {
@@ -132,9 +143,10 @@ if (startImage < endImage) {
 	endImage = tempStartImage;
 }
 
-
+// Make user select output directory
 dir = getDirectory("Choose destination directory for BMP stack");
 
+// If "Create Information File" is selected open new .txt file...
 if (createInfoFile == "Yes") {
 	f = File.open(dir+"info.txt");
 	print(f,"Information File Created: "+currentDate()+"\t");
@@ -159,6 +171,7 @@ if (createInfoFile == "Yes") {
 	print(f,"Run 'Despeckle': "+runDespeckle+"\t");
 }
 
+// If "Normalize by Reference" has been selected get reference image data...
 if(runNormalizeByReference == "Yes") {
 	if (selectionType() == -1) run("Select All");
 	checkROI(0,3,-1);
@@ -175,6 +188,8 @@ if(runNormalizeByReference == "Yes") {
 	run("Select None");
 }
 
+
+// Start Batch Processing...
 if (createInfoFile == "Yes") {
 	print(f,"\t");
 	print(f,"---- Batch Process START ----\t");
@@ -188,19 +203,28 @@ for (i=startImage; i< endImage; i++) {
 		print(f,"Slice n="+i+"\t");
 	}
 	
+	// Show progress bar
 	showProgress(i, endImage);
+	
+	// Select image and slice, and get file name
 	selectImage(id);
 	setSlice(i);
 	name = getMetadata;
+	
+	// Duplicate image so we don't write over original
 	run("Duplicate...", "title=temp");
 	
+	
+	// Run "Normalize Individualy" if selected...
 	if(runNormalize == "Yes") {
 		run("Enhance Contrast...", "saturated="+saturateValue+" normalize");
 		if (createInfoFile == "Yes") {
 			print(f,"> Normalize Run\t");
 		}
 	}
-
+	
+	
+	// Run "Normalize by Reference Image" if selected...
 	if(runNormalizeByReference == "Yes") {
 		getStatistics(area, mean, min, max, std, histogram);
 		intensityRatio = meanReference / mean;
@@ -213,6 +237,8 @@ for (i=startImage; i< endImage; i++) {
 		}
 	}
 	
+	
+	Run "Brightness/Contrast" if selected...
 	if (runBrightnessContrast == "Yes" || runBrightnessContrast == "Auto") {
 
 	  	getMinAndMax(min, max);
@@ -239,7 +265,8 @@ for (i=startImage; i< endImage; i++) {
 	  	}
 	  	
 	}
-  
+  	
+  	Run "Despeckle" if selected...
 	if (runDespeckle == "Yes") {
 		run("Despeckle", "slice");
 		if (createInfoFile == "Yes") {
@@ -247,23 +274,25 @@ for (i=startImage; i< endImage; i++) {
 		}
 	}
 
-	
+	// Save newly altered file
 	if(i<=10) saveAs(outputFormat, dir+"000"+(i-1));
-    if(i>10&&i<=100) saveAs(outputFormat, dir+"00"+(i-1));	      
-    if(i>100&&i<=1000) saveAs(outputFormat, dir+"0"+(i-1));	      
+	if(i>10&&i<=100) saveAs(outputFormat, dir+"00"+(i-1));	      
+	if(i>100&&i<=1000) saveAs(outputFormat, dir+"0"+(i-1));	      
 	if(i>1000) saveAs(outputFormat, dir+(i-1));
 
-	
-run("Select None");
+	// Deselect everything
+	run("Select None");
 	
 	if (createInfoFile == "Yes") {
 		print(f,"\t");
 	}
 	
+	// Close the new file
 	close();
 }
 setBatchMode(false);
 
+// Finish and close the "Information" file if needed
 if (createInfoFile == "Yes") {
 	print(f,"---- Batch Process END ----\t\t");
 	print(f,"Information File Finished: "+currentDate()+"\t");
