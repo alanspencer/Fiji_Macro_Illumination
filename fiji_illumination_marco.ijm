@@ -39,7 +39,7 @@ function currentDate() {
 }
 
 // Setup Dialog function
-function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multipyValue) {
+function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multiplyValue) {
 	Dialog.create("Enter Input Data");
 	Dialog.addMessage("The following information is required:");
 	Dialog.addSlider("Start Image", 1, nSlices, startImage);
@@ -48,8 +48,8 @@ function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, cre
 	Dialog.addRadioButtonGroup("Create Information File", newArray("Yes","No"), 1, 2, createInfoFile);
 	
 	Dialog.addMessage("(Optional) Multiply slices by custom value:");
-	Dialog.addRadioButtonGroup("Multiply", newArray("Yes","No", "Auto"), 1, 2, runMultiply);
- 	Dialog.addNumber("Multiply Value", multipyValue);
+	Dialog.addRadioButtonGroup("Multiply", newArray("Yes","No"), 1, 2, runMultiply);
+ 	Dialog.addNumber("Multiply Value", multiplyValue);
 	
 	Dialog.addMessage("(Optional) Normalize the Images in the Stack individually:");
 	Dialog.addRadioButtonGroup("Normalize Images in Stack?", newArray("Yes","No"), 1, 2, runNormalize);
@@ -82,7 +82,7 @@ while(error == 1) {
 	if (loop == 1) {
 		setupDialog(1, nSlices, 0.00, 255.00, "bmp", "Yes", "No", 0.4, "No", getSliceNumber(), "No", "Yes", "No", 2000000.00);
 	} else {
-		setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multipyValue);		
+		setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multiplyValue);		
 	}
 	
 	startImage = Dialog.getNumber();
@@ -90,7 +90,7 @@ while(error == 1) {
   	outputFormat = Dialog.getChoice();
 	createInfoFile = Dialog.getRadioButton();
 	runMultiply = Dialog.getRadioButton();
-	multipyValue = d2s(Dialog.getNumber(), 2);
+	multiplyValue = d2s(Dialog.getNumber(), 2);
   	runNormalize = Dialog.getRadioButton();
 	saturateValue = Dialog.getNumber();
 	runNormalizeByReference = Dialog.getRadioButton();
@@ -268,7 +268,7 @@ for (i=startImage; i< endImage; i++) {
 	  	oldMax = max;
 	  	if (runBrightnessContrast == "Auto") {	  		
 	  		run("Enhance Contrast...", "saturated=0.35");
-	  		run("Apply LUT", "slice");
+	  		//run("Apply LUT", "slice");
 	  		getMinAndMax(min, max);
 	  		newMin = min;
 	  		newMax = max;
@@ -277,7 +277,7 @@ for (i=startImage; i< endImage; i++) {
 		  	}
 	  	} else {
 	  		setMinAndMax(minValue, maxValue);
-	  		run("Apply LUT", "slice");
+	  		//run("Apply LUT", "slice");
 	  		getMinAndMax(min, max);
 	  		newMin = min;
 	  		newMax = max;
