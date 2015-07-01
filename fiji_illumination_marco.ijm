@@ -39,13 +39,17 @@ function currentDate() {
 }
 
 // Setup Dialog function
-function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast) {
+function setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multipyValue) {
 	Dialog.create("Enter Input Data");
 	Dialog.addMessage("The following information is required:");
 	Dialog.addSlider("Start Image", 1, nSlices, startImage);
 	Dialog.addSlider("End Image", 1, nSlices, endImage);
 	Dialog.addChoice("Output Format", newArray("bmp","png","tiff"), outputFormat);  	
 	Dialog.addRadioButtonGroup("Create Information File", newArray("Yes","No"), 1, 2, createInfoFile);
+	
+	Dialog.addMessage("(Optional) Multiply slices by custom value:");
+	Dialog.addRadioButtonGroup("Multiply", newArray("Yes","No", "Auto"), 1, 2, runMultiply);
+ 	Dialog.addNumber("Multiply Value", multipyValue);
 	
 	Dialog.addMessage("(Optional) Normalize the Images in the Stack individually:");
 	Dialog.addRadioButtonGroup("Normalize Images in Stack?", newArray("Yes","No"), 1, 2, runNormalize);
@@ -76,15 +80,17 @@ loop = 1;
 while(error == 1) {
 	
 	if (loop == 1) {
-		setupDialog(1, nSlices, 0.00, 255.00, "bmp", "Yes", "No", 0.4, "No", getSliceNumber(), "No", "Yes");
+		setupDialog(1, nSlices, 0.00, 255.00, "bmp", "Yes", "No", 0.4, "No", getSliceNumber(), "No", "Yes", "No", 2000000.00);
 	} else {
-		setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast);		
+		setupDialog(startImage, endImage, minValue, maxValue, outputFormat, createInfoFile, runNormalize, saturateValue, runNormalizeByReference, referenceImageValue, runDespeckle, runBrightnessContrast, runMultiply, multipyValue);		
 	}
 	
 	startImage = Dialog.getNumber();
 	endImage = Dialog.getNumber();
   	outputFormat = Dialog.getChoice();
-	createInfoFile = Dialog.getRadioButton();		
+	createInfoFile = Dialog.getRadioButton();
+	runMultiply = Dialog.getRadioButton();
+	multipyValue = d2s(Dialog.getNumber(), 2);
   	runNormalize = Dialog.getRadioButton();
 	saturateValue = Dialog.getNumber();
 	runNormalizeByReference = Dialog.getRadioButton();
@@ -157,20 +163,24 @@ if (createInfoFile == "Yes") {
 	print(f,"Start Image: "+startImage+"\t");
 	print(f,"End Image: "+endImage+"\t");
 	print(f,"Output Format: "+outputFormat+"\t");
+	print(f,"Run 'Multipy slices by custom value': "+runMultiply+"\t");
+	if (runMultiply == "Yes") {
+		print(f,"-- Multiply Value: "+multiplyValue+"\t");
+	}
 	print(f,"Run 'Normalize the Images in the Stack individually': "+runNormalize+"\t");
 	if (runNormalize == "Yes") {
 		print(f,"-- Saturate Value: "+saturateValue+"\t");	
 	}
-	print(f,"Run 'Normalize Stack by Reference Image': "+runNormalizeByReference+"\t");
-	if (runNormalizeByReference == "Yes") {
-		print(f,"-- Reference Image: "+referenceImageValue+"\t");	
-	}
+	print(f,"Run Brightness/Contrast: "+runBrightnessContrast+"\t");
 	if (runBrightnessContrast == "Yes" || runBrightnessContrast == "Auto") {
-	    print(f,"Run Brightness/Contrast: "+runBrightnessContrast+"\t");
 	  	print(f,"-- Min Value: "+minValue+"\t");
 	  	print(f,"-- Max Value: "+maxValue+"\t");
 	}
 	print(f,"Run 'Despeckle': "+runDespeckle+"\t");
+	print(f,"Run 'Normalize Stack by Reference Image': "+runNormalizeByReference+"\t");
+	if (runNormalizeByReference == "Yes") {
+		print(f,"-- Reference Image: "+referenceImageValue+"\t");	
+	}
 }
 
 // If "Normalize by Reference" has been selected get reference image data...
@@ -181,6 +191,10 @@ if(runNormalizeByReference == "Yes") {
 	run("Select None");
 
 	run("Restore Selection");
+	
+	if (runMultiply == "Yes") {
+		run("Multiply...", "value="+multiplyValue);
+	}
 	
 	getStatistics(area, mean, min, max, std, histogram);
 	meanReference = mean;
@@ -216,6 +230,12 @@ for (i=startImage; i< endImage; i++) {
 	// Duplicate image so we don't write over original
 	run("Duplicate...", "title=temp");
 	
+	if (runMultiply == "Yes") {
+		run("Multiply...", "value="+multiplyValue);
+		if (createInfoFile == "Yes") {
+			print(f,"> Multiply Run\t");
+		}
+	}
 	
 	// Run "Normalize Individualy" if selected...
 	if(runNormalize == "Yes") {
