@@ -28,7 +28,7 @@ function currentDate() {
     timeStr = dayNames[dayOfWeek]+" ";
 	if (dayOfMonth<10) {timeStr = timeStr+"0";}
 	timeStr = timeStr+dayOfMonth+"-"+monthNames[month]+"-"+year+"\nTime: ";
-	if (hour<10) {timeStr = TimeStr+"0";}
+	if (hour<10) {timeStr = timeStr+"0";}
 	timeStr = timeStr+hour+":";
 	if (minute<10) {timeStr = timeStr+"0";}
 	timeStr = timeStr+minute+":";
